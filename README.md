@@ -8,12 +8,17 @@
 - [Staford CS 234](https://www.youtube.com/playlist?list=PLoROMvodv4rN4wG6Nk6sNpTEbuOSosZdX)
 - [Nathan's Book on RLHF](https://rlhfbook.com/c/01-introduction.html)
 
-## Theory and Practice : 
-### 1. RL Intro (snapshot) : 
+## My Experiments / Practice :
+
+
+## Papers : 
+### 1. RL Foundations (snapshot) : 
 
 ### 2. RL + LLMs :
 - [Deep Reinforcement Learning from Human Preferences - not LLM](https://arxiv.org/pdf/1706.03741)
 - [Learning to summarize with human feedback](https://proceedings.neurips.cc/paper_files/paper/2020/file/1f89885d556929e98d3ef9b86448f951-Paper.pdf)
+- [Training Language Models to follow human feedback](https://arxiv.org/pdf/2203.02155)
+- [Direct Preference Optimization](https://arxiv.org/pdf/2305.18290)
 
 ## Thoughtful Reads :
 - [Era Of Experience](https://storage.googleapis.com/deepmind-media/Era-of-Experience%20/The%20Era%20of%20Experience%20Paper.pdf)
