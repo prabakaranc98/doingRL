@@ -12,8 +12,8 @@
 ### 1. RL Intro (snapshot) : 
 
 ### 2. RL + LLMs :
-- (Deep Reinforcement Learning from Human Preferences - not LLM)[https://arxiv.org/pdf/1706.03741]
-- (Learning to summarize with human feedback)[https://proceedings.neurips.cc/paper_files/paper/2020/file/1f89885d556929e98d3ef9b86448f951-Paper.pdf]
+- [Deep Reinforcement Learning from Human Preferences - not LLM](https://arxiv.org/pdf/1706.03741)
+- [Learning to summarize with human feedback](https://proceedings.neurips.cc/paper_files/paper/2020/file/1f89885d556929e98d3ef9b86448f951-Paper.pdf)
 
 ## Thoughtful Reads :
 - [Era Of Experience](https://storage.googleapis.com/deepmind-media/Era-of-Experience%20/The%20Era%20of%20Experience%20Paper.pdf)
