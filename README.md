@@ -20,6 +20,10 @@
 - [Training Language Models to follow human feedback](https://arxiv.org/pdf/2203.02155)
 - [Direct Preference Optimization](https://arxiv.org/pdf/2305.18290)
 
+- Survey Papers for a comprehensive Read :
+  - [Reinforcement Learning Enhanced LLMs: A Survey](https://arxiv.org/pdf/2412.10400)
+  - [A COMPREHENSIVE SURVEY OF LLM ALIGNMENT TECHNIQUES](https://arxiv.org/pdf/2407.16216)
+
 ## Thoughtful Reads :
 - [Era Of Experience](https://storage.googleapis.com/deepmind-media/Era-of-Experience%20/The%20Era%20of%20Experience%20Paper.pdf)
 
