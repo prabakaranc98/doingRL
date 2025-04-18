@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinforcement Learning Illustration & Fundamentals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        /* Ensure Inter font is loaded if available */
+        body {
+             font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        /* --- RL Loop Animation Styles --- */
+        .rl-loop-container { display: flex; justify-content: space-around; align-items: center; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: #f8fafc; position: relative; overflow: hidden; min-height: 120px; }
+        .rl-loop-element { text-align: center; z-index: 5; position: relative; }
+        .rl-loop-element i { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .rl-loop-label { font-weight: 600; color: #475569; }
+        .rl-arrow { position: absolute; font-size: 1rem; font-weight: bold; color: #64748b; padding: 2px 6px; background-color: #f8fafc; border-radius: 4px; white-space: nowrap; opacity: 0; z-index: 1; }
+        #rl-action-arrow { top: 40%; left: 30%; animation: moveAction 4s infinite ease-in-out; }
+        @keyframes moveAction { 0%, 100% { left: 30%; opacity: 0; } 20% { opacity: 1; } 50% { left: 65%; opacity: 1; } 70%, 99% { opacity: 0; } }
+        #rl-state-arrow { bottom: 45%; right: 30%; animation: moveStateReward 4s infinite ease-in-out 2s; }
+        #rl-reward-arrow { bottom: 25%; right: 30%; animation: moveStateReward 4s infinite ease-in-out 2s; }
+        @keyframes moveStateReward { 0%, 100% { right: 30%; opacity: 0; } 20% { opacity: 1; } 50% { right: 65%; opacity: 1; } 70%, 99% { opacity: 0; } }
+
+        /* --- Intuition Section Style --- */
+        .intuition-section { padding: 1rem 1.5rem; margin-bottom: 2rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #f9fafb; text-align: center; }
+        .intuition-section h3 { font-size: 1.125rem; font-weight: 600; color: #1f2937; margin-bottom: 0.75rem; }
+        .intuition-section p { color: #4b5563; font-size: 0.95rem; line-height: 1.6; }
+        .intuition-section strong { color: #111827; }
+
+        /* --- Grid & Agent Styles --- */
+        .grid-cell { width: 50px; height: 50px; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; position: relative; font-size: 0.75rem; color: #64748b; }
+        .agent { width: 30px; height: 30px; background-color: #3b82f6; border-radius: 50%; position: absolute; transition: all 0.5s ease-in-out; display: flex; align-items: center; justify-content: center; color: white; z-index: 10; }
+        .goal { color: #f59e0b; font-size: 1.5rem; }
+        .policy-arrow { position: absolute; font-size: 1rem; color: #94a3b8; z-index: 5; }
+        .value-text { position: absolute; bottom: 2px; right: 4px; font-size: 0.65rem; font-weight: bold; color: #1e40af; z-index: 5; }
+        .obstacle { background-color: #475569; }
+
+        /* --- Message Box --- */
+        #message-box { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px 20px; border-radius: 8px; display: none; z-index: 100; font-family: 'Inter', sans-serif; }
+
+        /* --- Explanation Section Styles (Shared) --- */
+        .explanation-section, .fundamentals-card, .rl-llm-section { line-height: 1.6; margin-bottom: 1.5rem; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background-color: #f8fafc; }
+        .explanation-section h2, .fundamentals-card h3, .rl-llm-section h2 { margin-bottom: 1rem; font-weight: 700; color: #1e293b; text-align: center; }
+        .explanation-section h3, .fundamentals-card h4, .rl-llm-section h3, .rl-llm-section h4 { margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 600; color: #334155; } /* Added h3 for rl-llm */
+        .explanation-section p, .explanation-section li, .fundamentals-card p, .fundamentals-card li, .rl-llm-section p, .rl-llm-section li { color: #475569; margin-bottom: 0.5rem; font-size: 0.95rem; }
+        code, .math { background-color: #e2e8f0; padding: 0.1em 0.4em; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; color: #be123c; }
+        .math sub, .math sup { font-size: 0.75em; line-height: 0; position: relative; vertical-align: baseline; }
+        .math sub { top: 0.5em; } .math sup { bottom: 0.5em; }
+        .explanation-section ul, .fundamentals-card ul, .rl-llm-section ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .pseudocode { background-color: #f1f5f9; border-left: 4px solid #64748b; padding: 0.75rem 1rem; margin: 1rem 0; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; color: #334155; white-space: pre-wrap; border-radius: 0 0.25rem 0.25rem 0; }
+
+        /* --- LLM Text Generation Animation Styles --- */
+        .llm-anim-container { display: flex; flex-direction: column; align-items: center; padding: 1rem; margin-top: 1.5rem; border: 1px dashed #94a3b8; border-radius: 0.5rem; background-color: #ffffff; min-height: 200px; position: relative; }
+        .llm-anim-row { display: flex; justify-content: space-around; align-items: center; width: 100%; margin-bottom: 1rem; }
+        .llm-anim-element { text-align: center; }
+        .llm-anim-element i { font-size: 1.8rem; margin-bottom: 0.25rem; }
+        .llm-anim-label { font-size: 0.8rem; font-weight: 500; color: #475569; }
+        #llm-output-sequence { font-family: 'Consolas', 'Monaco', monospace; font-size: 1.1rem; padding: 0.5rem 1rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; background-color: #f8fafc; min-height: 40px; width: 80%; margin-top: 0.5rem; white-space: pre-wrap; color: #1e293b; position: relative; /* Needed for cursor */ } /* Added relative positioning */
+        .llm-thinking-bubble { position: absolute; bottom: 65%; left: 50%; transform: translateX(-50%); background-color: rgba(226, 232, 240, 0.9); padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem; font-family: 'Consolas', 'Monaco', monospace; color: #334155; opacity: 0; transition: opacity 0.3s ease-in-out; z-index: 15; white-space: nowrap; }
+        .llm-thinking-bubble.visible { opacity: 1; }
+        .llm-reward-signal { font-size: 1.5rem; font-weight: bold; opacity: 0; transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; position: absolute; top: 25%; right: 15%; z-index: 15; }
+        .llm-reward-signal.visible { opacity: 1; transform: scale(1.2); }
+        .llm-reward-signal.positive { color: #16a34a; }
+        .llm-reward-signal.negative { color: #dc2626; }
+
+        /* Blinking cursor effect */
+        #llm-output-sequence::after {
+            content: '|';
+            position: absolute; /* Position relative to the output div */
+            right: 0.5rem; /* Adjust as needed */
+            bottom: 0.5rem; /* Adjust as needed */
+            animation: blink 1s step-start infinite;
+            font-weight: bold;
+            color: #64748b;
+            opacity: var(--cursor-opacity, 1); /* Control visibility via JS */
+        }
+        #llm-output-sequence.no-cursor::after { display: none; } /* Hide cursor when class added */
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Highlight effect for chosen token */
+        .chosen-token { background-color: #a5f3fc; padding: 0 2px; border-radius: 2px; animation: highlightFade 1s ease-out; }
+        @keyframes highlightFade { from { background-color: #a5f3fc; } to { background-color: transparent; } }
+
+    </style>
+</head>
+<body class="bg-slate-100 p-8 font-sans">
+
+    <div class="container mx-auto max-w-5xl bg-white p-6 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-center text-slate-800 mb-6">Reinforcement Learning: Illustration & Fundamentals</h1>
+        <p class="text-center text-slate-600 mb-8">Visualizing Policy vs. Value approaches and exploring the core concepts.</p>
+
+        <div class="rl-loop-container">
+             <div class="rl-loop-element"> <i class="fas fa-robot text-blue-500"></i> <div class="rl-loop-label">Agent</div> </div>
+             <div class="rl-loop-element"> <i class="fas fa-globe-americas text-green-600"></i> <div class="rl-loop-label">Environment</div> </div>
+             <div id="rl-action-arrow" class="rl-arrow">Action (a) <i class="fas fa-long-arrow-alt-right ml-1"></i></div>
+             <div id="rl-state-arrow" class="rl-arrow"><i class="fas fa-long-arrow-alt-left mr-1"></i> State (s')</div>
+             <div id="rl-reward-arrow" class="rl-arrow"><i class="fas fa-long-arrow-alt-left mr-1"></i> Reward (r)</div>
+        </div>
+
+        <div class="intuition-section">
+            <h3>RL Intuition: Learning like Training a Pet</h3>
+            <p> Think of Reinforcement Learning like teaching a dog new tricks. The <strong>Agent</strong> is the dog, and the <strong>Environment</strong> is the room or situation it's in (including you, the trainer). When you give a command (the <strong>State</strong>), the dog tries an <strong>Action</strong> (like sitting or rolling over). If the dog performs the desired action, you give it a treat (a positive <strong>Reward</strong> <i class="fas fa-plus-circle text-green-500 text-xs"></i>). If it does something wrong, you might give a gentle correction or no treat (a neutral or negative <strong>Reward</strong> <i class="fas fa-minus-circle text-red-500 text-xs"></i>). Through this <strong>trial-and-error</strong> process and receiving <strong>feedback</strong> (rewards/penalties), the dog gradually learns which actions lead to the best outcomes (treats!) in different situations. RL agents learn optimal strategies (<strong>Policies</strong>) in a similar way, by interacting with their environment and maximizing their cumulative rewards. </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            <div class="border border-slate-300 p-4 rounded-lg bg-slate-50/50 shadow-sm">
+                <h2 class="text-xl font-semibold text-center text-blue-700 mb-4">Policy-Based Approach</h2>
+                <p class="text-sm text-slate-600 mb-4 text-center">The agent follows a learned policy (probabilities of taking actions). Arrows indicate the most likely action from each state.</p>
+                <div id="policy-grid" class="grid grid-cols-4 gap-1 mx-auto w-[212px] mb-4 relative"></div>
+                <div class="text-center">
+                    <button id="start-policy" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 transition duration-150 ease-in-out shadow hover:shadow-md">Start Policy Agent</button>
+                    <button id="reset-policy" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md">Reset</button>
+                </div>
+                 <p id="policy-status" class="text-center text-sm text-slate-500 mt-2 h-4"></p>
+            </div>
+            <div class="border border-slate-300 p-4 rounded-lg bg-slate-50/50 shadow-sm">
+                <h2 class="text-xl font-semibold text-center text-green-700 mb-4">Value-Based Approach</h2>
+                <p class="text-sm text-slate-600 mb-4 text-center">The agent chooses actions leading to states with the highest learned value. Numbers indicate the estimated value of being in that state.</p>
+                <div id="value-grid" class="grid grid-cols-4 gap-1 mx-auto w-[212px] mb-4 relative"></div>
+                 <div class="text-center">
+                    <button id="start-value" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2 transition duration-150 ease-in-out shadow hover:shadow-md">Start Value Agent</button>
+                     <button id="reset-value" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md">Reset</button>
+                </div>
+                 <p id="value-status" class="text-center text-sm text-slate-500 mt-2 h-4"></p>
+            </div>
+        </div>
+         <div id="message-box"></div>
+
+        <div class="explanation-section">
+             <h2 class="text-2xl">RL Building Blocks & Mathematical View</h2>
+             <p>Reinforcement Learning problems are typically formalized using the framework of **Markov Decision Processes (MDPs)**. Here's a breakdown of the essential components and concepts:</p>
+            <h3>What's Needed for RL (The MDP Components):</h3>
+            <ul>
+                <li><strong>States (<span class="math">S</span>):</strong> A set of all possible situations the agent can be in. Represented as <code class="math">s</code>.</li>
+                <li><strong>Actions (<span class="math">A</span>):</strong> A set of all possible choices the agent can make. Represented as <code class="math">a</code>.</li>
+                <li><strong>Transition Probability (<span class="math">P</span>):</strong> Defines the environment's dynamics. <code class="math">P(s' | s, a)</code> is the probability of transitioning to state <code class="math">s'</code> after taking action <code class="math">a</code> in state <code class="math">s</code>.</li>
+                <li><strong>Reward Function (<span class="math">R</span>):</strong> Defines the immediate feedback. <code class="math">R(s, a, s')</code> is the reward received after transitioning from state <code class="math">s</code> to state <code class="math">s'</code> via action <code class="math">a</code>.</li>
+                <li><strong>Discount Factor (<span class="math">γ</span> - Gamma):</strong> A number between 0 and 1 (e.g., 0.9). Determines the importance of future rewards.</li>
+            </ul>
+             <h3>The Goal: Maximize Expected Return</h3>
+             <p>The agent aims to learn a **Policy (<span class="math">π</span>)** to find the optimal policy <code class="math">π*</code> that maximizes the **Expected Return (<span class="math">G<sub>t</sub></span>)**: the sum of discounted future rewards:</p>
+             <p><code class="math">G<sub>t</sub> = R<sub>t+1</sub> + γR<sub>t+2</sub> + γ<sup>2</sup>R<sub>t+3</sub> + ... = Σ<sub>k=0</sub><sup>∞</sup> γ<sup>k</sup>R<sub>t+k+1</sub></code></p>
+            <h3>Mathematical Tools: Value Functions & Bellman Equations</h3>
+            <p>RL often uses **Value Functions**:</p>
+            <ul>
+                <li><strong>State-Value Function (<span class="math">V<sup>π</sup>(s)</span>):</strong> Expected return starting from state <code class="math">s</code> and following policy <code class="math">π</code>. <br> <code class="math">V<sup>π</sup>(s) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub>=s]</code></li>
+                <li><strong>Action-Value Function (<span class="math">Q<sup>π</sup>(s, a)</span>):</strong> Expected return starting from state <code class="math">s</code>, taking action <code class="math">a</code>, then following policy <code class="math">π</code>. <br> <code class="math">Q<sup>π</sup>(s, a) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub>=s, A<sub>t</sub>=a]</code></li>
+            </ul>
+            <p>These obey the **Bellman Equations**, e.g., for <code class="math">V<sup>π</sup>(s)</code>:</p>
+            <p><code class="math">V<sup>π</sup>(s) = Σ<sub>a</sub> π(a|s) Σ<sub>s', r</sub> p(s', r | s, a) [r + γV<sup>π</sup>(s')]</code></p>
+            <h3>Generalization: Learning the Building Blocks</h3>
+            <p>This MDP framework is fundamental.</p>
+            <ul>
+                <li><strong>Policy-Based Methods:</strong> Directly learn/optimize the policy <code class="math">π(a|s)</code>.</li>
+                <li><strong>Value-Based Methods:</strong> Learn the optimal value function (usually <code class="math">Q*(s, a)</code>) and derive the policy.</li>
+                <li><strong>Large/Continuous Spaces:</strong> Use **Function Approximation** (e.g., neural networks) to estimate policy/values (<code class="math">π(a|s; θ)</code> or <code class="math">Q(s, a; θ)</code>).</li>
+            </ul>
+        </div>
+
+        <hr class="my-8 border-slate-300">
+        <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">Detailed RL Fundamentals</h2>
+        <div class="fundamentals-card">
+            <h3>1. Agent <i class="fas fa-robot text-blue-500 ml-2"></i></h3>
+            <p><strong>Who/What:</strong> The learner or decision-maker in the RL setup.</p>
+            <p><strong>Goal:</strong> To learn an optimal strategy, called a policy (<span class="math">π</span>), that maximizes the total expected cumulative reward over time by interacting with an environment.</p>
+            <p><strong>Interaction:</strong> At each step, the agent observes the current state (<span class="math">s</span>) of the environment, chooses an action (<span class="math">a</span>), receives a reward (<span class="math">r</span>), and observes the next state (<span class="math">s'</span>).</p>
+            <p><strong>Example:</strong> A self-driving car learning to navigate traffic, a game AI mastering Go, a trading bot making investment decisions.</p>
+        </div>
+        <div class="fundamentals-card">
+            <h3>2. Environment <i class="fas fa-globe-americas text-green-600 ml-2"></i></h3>
+            <p><strong>Who/What:</strong> Everything outside the agent that it interacts with. It represents the problem or task the agent needs to solve.</p>
+            <p><strong>Role:</strong> Defines the rules of interaction. It takes the agent's action (<span class="math">a</span>) in the current state (<span class="math">s</span>), determines the next state (<span class="math">s'</span>) based on its internal dynamics (transition probability <span class="math">P</span>), and provides a reward (<span class="math">r</span>) based on the transition (reward function <span class="math">R</span>).</p>
+            <p><strong>Interaction:</strong> Receives action <code class="math">a</code>, returns next state <code class="math">s'</code> and reward <code class="math">r</code>.</p>
+            <p><strong>Example:</strong> The physics simulator for the self-driving car, the rules and opponent of the Go game, the stock market dynamics for the trading bot.</p>
+        </div>
+         <div class="fundamentals-card">
+            <h3>3. State (<span class="math">s, S</span>) <i class="fas fa-map-marker-alt text-purple-600 ml-2"></i></h3>
+            <p><strong>What:</strong> A complete description of the environment's current situation relevant to the agent's decision-making. It's the information the agent receives at each timestep.</p>
+            <p><strong>Types:</strong> <ul><li><strong>Discrete:</strong> Finite number of possibilities (e.g., positions on a board, inventory levels).</li><li><strong>Continuous:</strong> Values within a range (e.g., robot arm angles, vehicle velocity, sensor readings).</li></ul></p>
+            <p><strong>Key Property (Markov):</strong> Ideally, the state <code class="math">s<sub>t</sub></code> captures all relevant information from the past history needed to predict the future. <code class="math">P(s<sub>t+1</sub> | s<sub>t</sub>, a<sub>t</sub>) = P(s<sub>t+1</sub> | s<sub>t</sub>, a<sub>t</sub>, s<sub>t-1</sub>, a<sub>t-1</sub>, ..., s<sub>0</sub>, a<sub>0</sub>)</code>. This simplifies learning significantly.</p>
+            <p><strong>Example:</strong> <code class="math">(row, col)</code> in the grid, pixel data from a camera feed, joint angles and velocities of a robot.</p>
+        </div>
+         <div class="fundamentals-card">
+            <h3>4. Action (<span class="math">a, A</span>) <i class="fas fa-gamepad text-red-600 ml-2"></i></h3>
+            <p><strong>What:</strong> A choice or decision the agent makes at a given state.</p>
+            <p><strong>Set (<span class="math">A(s)</span>):</strong> The collection of all possible actions the agent can take in state <code class="math">s</code> is the "action space". It can be the same for all states or state-dependent.</p>
+             <p><strong>Types:</strong> <ul><li><strong>Discrete:</strong> Finite set of choices (e.g., move North/South/East/West, button presses).</li><li><strong>Continuous:</strong> Values within a range (e.g., steering angle, motor torque, throttle percentage).</li></ul></p>
+            <p><strong>Example:</strong> Selecting 'Up' in the grid, applying 5 Newton-meters of torque, buying/selling/holding a stock.</p>
+        </div>
+        <div class="fundamentals-card">
+            <h3>5. Reward (<span class="math">r, R</span>) <i class="fas fa-star text-yellow-500 ml-2"></i></h3>
+            <p><strong>What:</strong> A scalar feedback signal <code class="math">r<sub>t+1</sub></code> received from the environment after taking action <code class="math">a<sub>t</sub></code> in state <code class="math">s<sub>t</sub></code> and transitioning to state <code class="math">s<sub>t+1</sub></code>.</p>
+            <p><strong>Purpose:</strong> Indicates the immediate desirability of the transition. It guides the agent's learning by signaling what is good or bad in the short term.</p>
+            <p><strong>Agent's Goal:</strong> Maximize the *cumulative* sum of discounted rewards (Return <span class="math">G<sub>t</sub></span>) over the long run, not just the immediate reward.</p>
+            <p><strong>Example:</strong> +10 for reaching a goal, -1 for crashing, +0.1 for moving closer to target, -0.01 per time step (to encourage speed).</p>
+            <p><strong>Reward Shaping:</strong> Designing effective reward functions is crucial and often challenging (sparse vs. dense rewards).</p>
+        </div>
+        <div class="fundamentals-card">
+            <h3>6. Policy (<span class="math">π</span>) <i class="fas fa-map-signs text-indigo-600 ml-2"></i></h3>
+            <p><strong>What:</strong> The agent's strategy or behavior function. It dictates which action the agent takes given a particular state.</p>
+            <p><strong>Types:</strong> <ul><li><strong>Deterministic Policy:</strong> Directly maps a state to a single action: <code class="math">a = π(s)</code>.</li><li><strong>Stochastic Policy:</strong> Maps a state to a probability distribution over actions: <code class="math">π(a|s) = P(A<sub>t</sub>=a | S<sub>t</sub>=s)</code>. This allows for exploration and handling uncertainty.</li></ul></p>
+            <p><strong>Goal of RL:</strong> To find an optimal policy (<span class="math">π*</span>) that yields the highest possible expected return from all states.</p>
+            <div class="pseudocode">// Example: Deterministic Policy Function
+function policy(state):
+    if state == GOAL: return NO_ACTION
+    if state == OBSTACLE: return NO_ACTION
+    // ... logic to determine best action ...
+    return best_action
+
+// Example: Using a Stochastic Policy
+function choose_action(state):
+    action_probabilities = stochastic_policy(state) // e.g., [0.7 (Up), 0.1 (Down), 0.1 (Left), 0.1 (Right)]
+    chosen_action = sample_from(action_probabilities)
+    return chosen_action</div>
+        </div>
+        <div class="fundamentals-card">
+            <h3>7. Value Function (<span class="math">V, Q</span>) <i class="fas fa-calculator text-teal-600 ml-2"></i></h3>
+            <p><strong>What:</strong> Functions that estimate the expected long-term return (cumulative discounted reward) under a specific policy <span class="math">π</span>. They quantify the "goodness" of states or state-action pairs.</p>
+            <p><strong>Types:</strong> <ul><li><strong>State-Value Function <span class="math">V<sup>π</sup>(s)</span>:</strong> Expected return starting from state <code class="math">s</code> and following policy <code class="math">π</code>. <br> <code class="math">V<sup>π</sup>(s) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub>=s]</code></li><li><strong>Action-Value Function <span class="math">Q<sup>π</sup>(s, a)</span>:</strong> Expected return starting from state <code class="math">s</code>, taking action <code class="math">a</code>, and *then* following policy <code class="math">π</code>. <br> <code class="math">Q<sup>π</sup>(s, a) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub>=s, A<sub>t</sub>=a]</code></li></ul></p>
+            <p><strong>Usage:</strong> Crucial for evaluating policies and making decisions. Value-based methods learn these functions and derive policies from them (e.g., act greedily with respect to Q-values). Policy-based methods might use value functions to improve policy updates (Actor-Critic).</p>
+            <div class="pseudocode">// Example: Q-Learning Update (Value-Based, Model-Free)
+// After taking action 'a' in state 's', observing reward 'r' and next state 's_prime':
+current_q = Q(s, a)
+max_next_q = max(Q(s_prime, possible_action) for possible_action in Actions(s_prime))
+temporal_difference_target = r + gamma * max_next_q
+temporal_difference_error = temporal_difference_target - current_q
+Q(s, a) = Q(s, a) + alpha * temporal_difference_error // alpha is learning rate</div>
+        </div>
+        <div class="fundamentals-card">
+            <h3>8. Model (Optional) <i class="fas fa-cogs text-gray-600 ml-2"></i></h3>
+            <p><strong>What:</strong> An internal representation the agent might learn about how the environment works. It mimics the environment's behavior.</p>
+            <p><strong>Components:</strong> <ul><li><strong>Transition Model:</strong> Predicts the next state: <code class="math">P(s' | s, a)</code>.</li><li><strong>Reward Model:</strong> Predicts the next reward: <code class="math">R(s, a, s')</code>.</li></ul></p>
+            <p><strong>Usage:</strong> <ul><li><strong>Model-Based RL:</strong> The agent learns a model and uses it for planning (simulating future trajectories) to make decisions or improve its policy/value function (e.g., Dyna-Q, AlphaZero). Can be more sample-efficient but requires learning the model accurately.</li><li><strong>Model-Free RL:</strong> The agent learns the policy or value function directly from trial-and-error experience without building an explicit model of the environment (e.g., Q-Learning, SARSA, Policy Gradients). Often simpler to implement and more common, especially with complex environments.</li></ul></p>
+             <div class="pseudocode">// Model-Based Idea:
+function plan_action(state):
+    best_action = null
+    best_expected_return = -infinity
+    for each possible_action in Actions(state):
+        // Use the learned model to simulate outcomes
+        simulated_return = simulate_future(state, possible_action, learned_model)
+        if simulated_return > best_expected_return:
+            best_expected_return = simulated_return
+            best_action = possible_action
+    return best_action</div>
+        </div>
+        <div class="fundamentals-card">
+            <h3>9. Exploration vs. Exploitation <i class="fas fa-search-location text-orange-500 ml-2"></i> vs <i class="fas fa-trophy text-orange-500 ml-1"></i></h3>
+            <p><strong>The Dilemma:</strong> A fundamental trade-off in RL.</p>
+                <ul><li><strong>Exploitation:</strong> Using the current knowledge (policy or value function) to choose the action believed to be best right now to maximize immediate or short-term expected reward.</li><li><strong>Exploration:</strong> Trying out different (potentially suboptimal) actions to gather more information about the environment, discover new states, or refine estimates of action values. This might lead to better long-term rewards.</li></ul>
+            <p><strong>Importance:</strong> Balancing exploration and exploitation is crucial for effective learning. Too much exploitation leads to settling for suboptimal strategies; too much exploration wastes time and resources.</p>
+            <p><strong>Common Techniques:</strong> <ul><li><strong>Epsilon-Greedy (<span class="math">ε</span>-greedy):</strong> With probability <span class="math">ε</span>, choose a random action (explore); otherwise (probability <span class="math">1-ε</span>), choose the currently best-known action (exploit). <span class="math">ε</span> often decreases over time.</li><li><strong>Optimistic Initialization:</strong> Initialize value estimates high to encourage exploring unknown states/actions initially.</li><li><strong>Upper Confidence Bound (UCB):</strong> Choose actions based on both their estimated value and the uncertainty in that estimate.</li><li><strong>Boltzmann Exploration (Softmax):</strong> Choose actions probabilistically based on their estimated values, with higher-value actions being more likely. A "temperature" parameter controls the randomness.</li></ul></p>
+             <div class="pseudocode">// Epsilon-Greedy Action Selection
+function choose_action_epsilon_greedy(state, epsilon):
+    if random_number() < epsilon:
+        // Explore: Choose a random action
+        return random_choice(Actions(state))
+    else:
+        // Exploit: Choose the action with the highest Q-value
+        return argmax_a(Q(state, a))</div>
+        </div>
+
+        <hr class="my-8 border-slate-300">
+        <div class="rl-llm-section">
+            <h2 class="text-2xl">Reinforcement Learning for LLMs (RLHF)</h2>
+            <p>Reinforcement Learning, particularly **Reinforcement Learning from Human Feedback (RLHF)**, is a key technique used to fine-tune Large Language Models (LLMs). While pre-training teaches LLMs language patterns from vast data, RLHF helps align the model's behavior with desired attributes like helpfulness, honesty, and harmlessness, improving planning and reasoning.</p>
+
+            <h4 class="text-lg font-semibold text-left mt-4">The RL Framework Applied to LLMs:</h4>
+            <ul>
+                <li><strong>Agent:</strong> The LLM itself (<i class="fas fa-brain text-purple-600"></i>).</li>
+                <li><strong>Environment:</strong> The process of generating text, step-by-step (token-by-token).</li>
+                <li><strong>State (<span class="math">s</span>):</strong> The sequence of tokens generated so far (e.g., "Reinforcement learning is...").</li>
+                <li><strong>Action (<span class="math">a</span>):</strong> Choosing the *next* token to add to the sequence (e.g., selecting " a").</li>
+                <li><strong>Reward (<span class="math">r</span>):</strong> A score indicating the quality (e.g., helpfulness, coherence, safety) of the generated text. This score is often provided by a separate **Reward Model (RM)** (<i class="fas fa-medal text-orange-500"></i>), which itself was trained on human preferences comparing different text completions.</li>
+                <li><strong>Policy (<span class="math">π</span>):</strong> The LLM's internal strategy for selecting the next token, aiming to maximize the expected reward from the RM. RLHF fine-tunes this policy.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-center mt-6 mb-2">Illustrative Text Generation with RL Feedback</h3>
+            <p class="text-sm text-center text-slate-500 mb-4">This animation simulates an LLM generating text, receiving feedback from a Reward Model.</p>
+            <div class="llm-anim-container">
+                 <div class="llm-anim-row">
+                    <div class="llm-anim-element">
+                        <i class="fas fa-brain text-purple-600"></i>
+                        <div class="llm-anim-label">LLM (Agent)</div>
+                    </div>
+                     <div class="llm-anim-element">
+                        <i class="fas fa-medal text-orange-500"></i>
+                        <div class="llm-anim-label">Reward Model (RM)</div>
+                    </div>
+                 </div>
+                 <div id="llm-output-sequence"></div>
+                 <div id="llm-thinking-bubble" class="llm-thinking-bubble">Thinking: [" useful", " powerful", " complex"]</div>
+                 <div id="llm-reward-signal" class="llm-reward-signal"></div>
+            </div>
+             <div class="text-center mt-4">
+                <button id="start-llm-anim" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md">
+                    Start Generation
+                </button>
+                <button id="reset-llm-anim" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out shadow hover:shadow-md ml-2">
+                    Reset
+                </button>
+             </div>
+        </div>
+        </div> <script>
+        // --- Configuration & Elements (Grids) ---
+        const GRID_SIZE = 4; const START_POS = { row: 3, col: 0 }; const GOAL_POS = { row: 0, col: 3 }; const OBSTACLE_POS = { row: 1, col: 1 }; const CELL_SIZE = 50 + 4;
+        const policyGridEl = document.getElementById('policy-grid'); const valueGridEl = document.getElementById('value-grid'); const startPolicyBtn = document.getElementById('start-policy'); const resetPolicyBtn = document.getElementById('reset-policy'); const startValueBtn = document.getElementById('start-value'); const resetValueBtn = document.getElementById('reset-value'); const policyStatusEl = document.getElementById('policy-status'); const valueStatusEl = document.getElementById('value-status'); const messageBoxEl = document.getElementById('message-box');
+        let policyAgentPos = { ...START_POS }; let valueAgentPos = { ...START_POS }; let policyAgentEl = null; let valueAgentEl = null; let policyInterval = null; let valueInterval = null;
+        const policy = [ [1, 1, 1, -1], [0, -1, 0, 0], [1, 1, 0, 0], [1, 1, 0, 0] ]; const values = [ [8, 9, 10, 100], [7, -100, 6, 9], [6, 7, 5, 8], [5, 6, 4, 7] ];
+
+        // --- Helper Functions (Grids - Collapsed) ---
+        let showMessage = function(message, duration = 2000) { messageBoxEl.textContent = message; messageBoxEl.style.display = 'block'; setTimeout(() => { messageBoxEl.style.display = 'none'; }, duration); };
+        let createCell = function(row, col, type) { const cell = document.createElement('div'); cell.classList.add('grid-cell'); cell.dataset.row = row; cell.dataset.col = col; cell.id = `${type}-cell-${row}-${col}`; if (row === GOAL_POS.row && col === GOAL_POS.col) { cell.innerHTML = '<i class="fas fa-star goal"></i>'; } else if (row === OBSTACLE_POS.row && col === OBSTACLE_POS.col) { cell.classList.add('obstacle'); cell.innerHTML = '<i class="fas fa-ban text-white"></i>'; } else if (type === 'policy' && policy[row][col] !== -1) { const arrow = document.createElement('span'); arrow.classList.add('policy-arrow'); const dir = policy[row][col]; arrow.innerHTML = ['<i class="fas fa-arrow-up"></i>','<i class="fas fa-arrow-right"></i>','<i class="fas fa-arrow-down"></i>','<i class="fas fa-arrow-left"></i>'][dir]; cell.appendChild(arrow); } else if (type === 'value' && values[row][col] !== -100) { const valueText = document.createElement('span'); valueText.classList.add('value-text'); valueText.textContent = values[row][col]; cell.appendChild(valueText); } return cell; };
+        let createGrid = function(gridElement, type) { gridElement.innerHTML = ''; gridElement.classList.add('relative'); for (let r = 0; r < GRID_SIZE; r++) { for (let c = 0; c < GRID_SIZE; c++) { gridElement.appendChild(createCell(r, c, type)); } } };
+        let createAgent = function(type) { const agent = document.createElement('div'); agent.classList.add('agent'); agent.innerHTML = '<i class="fas fa-robot"></i>'; agent.style.left = '0px'; agent.style.top = '0px'; if (type === 'policy') { agent.classList.add('bg-blue-500'); agent.id = 'policy-agent'; policyGridEl.appendChild(agent); policyAgentEl = agent; } else { agent.classList.add('bg-green-500'); agent.id = 'value-agent'; valueGridEl.appendChild(agent); valueAgentEl = agent; } moveAgentVisual(agent, START_POS.row, START_POS.col); };
+        let moveAgentVisual = function(agentElement, row, col) { if (agentElement) { const xOffset = col * (50 + 1); const yOffset = row * (50 + 1); agentElement.style.transform = `translate(${xOffset}px, ${yOffset}px)`; } };
+        let isValid = function(row, col) { return row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE && !(row === OBSTACLE_POS.row && col === OBSTACLE_POS.col); };
+        // --- RL Logic Functions (Grids - Collapsed) ---
+        let stepPolicyAgent = function() { if (!policyAgentEl || policyInterval === null) return; const { row, col } = policyAgentPos; if (row === GOAL_POS.row && col === GOAL_POS.col) { clearInterval(policyInterval); policyInterval = null; policyStatusEl.textContent = "Goal Reached!"; showMessage("Policy Agent: Goal Reached!"); startPolicyBtn.disabled = false; resetPolicyBtn.disabled = false; return; } let action = policy[row][col]; if (action === -1) { console.warn("Policy agent invalid state:", row, col); clearInterval(policyInterval); policyInterval = null; startPolicyBtn.disabled = false; resetPolicyBtn.disabled = false; policyStatusEl.textContent = "Error: Invalid state"; return; } const isExploring = Math.random() < 0.1; if (isExploring) { action = Math.floor(Math.random() * 4); policyStatusEl.textContent = "Exploring..."; } else { policyStatusEl.textContent = "Following Policy..."; } let nextRow = row, nextCol = col; if (action === 0) nextRow--; else if (action === 1) nextCol++; else if (action === 2) nextRow++; else if (action === 3) nextCol--; if (isValid(nextRow, nextCol)) { policyAgentPos = { row: nextRow, col: nextCol }; moveAgentVisual(policyAgentEl, nextRow, nextCol); } else { policyStatusEl.textContent = isExploring ? "Exploring: Hit wall!" : "Policy: Hit wall!"; } };
+        let stepValueAgent = function() { if (!valueAgentEl || valueInterval === null) return; const { row, col } = valueAgentPos; if (row === GOAL_POS.row && col === GOAL_POS.col) { clearInterval(valueInterval); valueInterval = null; valueStatusEl.textContent = "Goal Reached!"; showMessage("Value Agent: Goal Reached!"); startValueBtn.disabled = false; resetValueBtn.disabled = false; return; } let bestValue = -Infinity; let bestNextPos = { row, col }; const neighbors = [ { r: row - 1, c: col }, { r: row + 1, c: col }, { r: row, c: col - 1 }, { r: row, c: col + 1 } ]; valueStatusEl.textContent = "Choosing best value..."; neighbors.forEach(n => { if (isValid(n.r, n.c)) { const value = values[n.r][n.c]; if (value > bestValue) { bestValue = value; bestNextPos = { row: n.r, col: n.c }; } } }); const moved = !(bestNextPos.row === row && bestNextPos.col === col); valueAgentPos = bestNextPos; moveAgentVisual(valueAgentEl, bestNextPos.row, bestNextPos.col); setTimeout(() => { if (valueInterval) { valueStatusEl.textContent = moved ? `Moved to state with value ${bestValue}` : `Stuck!`; } }, 150); };
+        // --- Event Listeners & Reset Functions (Grids - Collapsed) ---
+        startPolicyBtn.addEventListener('click', () => { if (policyInterval) return; resetPolicyAgent(); policyStatusEl.textContent = "Running..."; startPolicyBtn.disabled = true; resetPolicyBtn.disabled = true; policyInterval = setInterval(stepPolicyAgent, 800); });
+        resetPolicyBtn.addEventListener('click', () => { resetPolicyAgent(); showMessage("Policy Agent Reset"); });
+        startValueBtn.addEventListener('click', () => { if (valueInterval) return; resetValueAgent(); valueStatusEl.textContent = "Running..."; startValueBtn.disabled = true; resetValueBtn.disabled = true; valueInterval = setInterval(stepValueAgent, 800); });
+        resetValueBtn.addEventListener('click', () => { resetValueAgent(); showMessage("Value Agent Reset"); });
+        let resetPolicyAgent = function() { clearInterval(policyInterval); policyInterval = null; policyAgentPos = { ...START_POS }; if (!policyAgentEl) createAgent('policy'); else moveAgentVisual(policyAgentEl, START_POS.row, START_POS.col); policyStatusEl.textContent = ""; startPolicyBtn.disabled = false; resetPolicyBtn.disabled = false; }
+        let resetValueAgent = function() { clearInterval(valueInterval); valueInterval = null; valueAgentPos = { ...START_POS }; if (!valueAgentEl) createAgent('value'); else moveAgentVisual(valueAgentEl, START_POS.row, START_POS.col); valueStatusEl.textContent = ""; startValueBtn.disabled = false; resetValueBtn.disabled = false; }
+
+        // === LLM Text Generation Animation Logic ===
+        const llmOutputEl = document.getElementById('llm-output-sequence');
+        const llmThinkingBubbleEl = document.getElementById('llm-thinking-bubble');
+        const llmRewardSignalEl = document.getElementById('llm-reward-signal');
+        const startLlmAnimBtn = document.getElementById('start-llm-anim');
+        const resetLlmAnimBtn = document.getElementById('reset-llm-anim');
+
+        // Simulate potential next tokens and rewards (simplified)
+        const generationSteps = [
+            { current: "", thinking: [" R", " L", " A"], chosen: " R", reward: "+", next: "R" },
+            { current: "R", thinking: [" L", " A", " M"], chosen: " L", reward: "+", next: "RL" },
+            { current: "RL", thinking: ["  ", " .", " :"], chosen: "  ", reward: "+", next: "RL " },
+            { current: "RL ", thinking: [" i", " a", " o"], chosen: " i", reward: "+", next: "RL i" },
+            { current: "RL i", thinking: [" s", " n", " t"], chosen: " s", reward: "+", next: "RL is" },
+            { current: "RL is", thinking: ["  ", " .", " :"], chosen: "  ", reward: "+", next: "RL is " },
+            { current: "RL is ", thinking: [" u", " p", " c"], chosen: " u", reward: "+", next: "RL is u" },
+            { current: "RL is u", thinking: [" s", " n", " t"], chosen: " s", reward: "+", next: "RL is us" },
+            { current: "RL is us", thinking: [" e", " a", " o"], chosen: " e", reward: "+", next: "RL is use" },
+            { current: "RL is use", thinking: [" f", " l", " r"], chosen: " f", reward: "+", next: "RL is usef" },
+            { current: "RL is usef", thinking: [" u", " o", " i"], chosen: " u", reward: "+", next: "RL is usefu" },
+            { current: "RL is usefu", thinking: [" l", " n", " s"], chosen: " l", reward: "+", next: "RL is useful" },
+            { current: "RL is useful", thinking: [" .", " !", " ?"], chosen: " .", reward: "+", next: "RL is useful." }
+        ];
+
+        let currentStepIndex = 0;
+        let llmAnimInterval = null;
+        let llmAnimTimeout = null; // To manage timeouts within steps
+
+        function resetLlmAnimation() {
+            clearInterval(llmAnimInterval);
+            clearTimeout(llmAnimTimeout);
+            llmAnimInterval = null;
+            llmAnimTimeout = null;
+            currentStepIndex = 0;
+            llmOutputEl.innerHTML = ""; // Clear text
+            llmThinkingBubbleEl.classList.remove('visible');
+            llmRewardSignalEl.classList.remove('visible', 'positive', 'negative');
+            llmOutputEl.classList.remove('no-cursor'); // Ensure cursor is potentially visible
+            llmOutputEl.style.setProperty('--cursor-opacity', '1'); // Make cursor visible
+            startLlmAnimBtn.disabled = false;
+        }
+
+        function runLlmAnimationStep() {
+            if (currentStepIndex >= generationSteps.length) {
+                clearInterval(llmAnimInterval);
+                llmAnimInterval = null;
+                startLlmAnimBtn.disabled = false; // Allow restart
+                showMessage("LLM Generation Complete!", 2500);
+                // Remove cursor after completion by adding class (or setting CSS variable)
+                llmOutputEl.classList.add('no-cursor');
+                llmOutputEl.style.setProperty('--cursor-opacity', '0'); // Hide cursor via variable
+                return;
+            }
+             // Ensure cursor is visible during generation
+            llmOutputEl.classList.remove('no-cursor');
+            llmOutputEl.style.setProperty('--cursor-opacity', '1');
+
+            const step = generationSteps[currentStepIndex];
+            // Use textContent for the base part to avoid potential XSS if 'current' was dynamic
+            llmOutputEl.textContent = step.current; // Show state *before* action
+
+            // 1. Show thinking bubble
+            llmThinkingBubbleEl.textContent = `Thinking: ${JSON.stringify(step.thinking)}`;
+            llmThinkingBubbleEl.classList.add('visible');
+            llmRewardSignalEl.classList.remove('visible', 'positive', 'negative'); // Hide previous reward
+
+            // 2. After a delay, show RM evaluation & reward
+            llmAnimTimeout = setTimeout(() => {
+                llmThinkingBubbleEl.classList.remove('visible'); // Hide thinking
+                llmRewardSignalEl.textContent = step.reward;
+                llmRewardSignalEl.classList.add('visible');
+                if (step.reward === "+") {
+                    llmRewardSignalEl.classList.add('positive');
+                    llmRewardSignalEl.classList.remove('negative');
+                } else {
+                    llmRewardSignalEl.classList.add('negative');
+                    llmRewardSignalEl.classList.remove('positive');
+                }
+
+                // 3. After another delay, update the sequence with chosen token
+                llmAnimTimeout = setTimeout(() => {
+                    llmRewardSignalEl.classList.remove('visible', 'positive', 'negative'); // Hide reward
+                    // Add chosen token with highlight
+                    const tokenSpan = document.createElement('span');
+                    tokenSpan.classList.add('chosen-token');
+                    // Handle spaces correctly - replace leading/trailing space with &nbsp; for visibility
+                    let displayToken = step.chosen.replace(/^ /g, '\u00A0').replace(/ $/g, '\u00A0'); // Use unicode non-breaking space
+                    tokenSpan.textContent = displayToken; // Use textContent now
+
+                    // Append the highlighted token (re-set textContent to include previous + new)
+                    llmOutputEl.textContent = step.current; // Set base text first
+                    llmOutputEl.appendChild(tokenSpan); // Append the new token span
+
+                    currentStepIndex++; // Move to next step for the next interval tick
+
+                }, 800); // Time for reward display
+
+            }, 1000); // Time for thinking display
+        }
+
+        startLlmAnimBtn.addEventListener('click', () => {
+            if (llmAnimInterval) return; // Already running
+            resetLlmAnimation(); // Reset state first
+            startLlmAnimBtn.disabled = true;
+            // Stagger the steps using setInterval
+            llmAnimInterval = setInterval(runLlmAnimationStep, 2200); // Approx total time per step
+            runLlmAnimationStep(); // Run the first step immediately
+        });
+
+        resetLlmAnimBtn.addEventListener('click', resetLlmAnimation);
+
+
+        // --- Initialization ---
+        function init() {
+            // Initialize Grids
+            createGrid(policyGridEl, 'policy');
+            createGrid(valueGridEl, 'value');
+            // Reset/Create Agents for Grids
+            resetPolicyAgent();
+            resetValueAgent();
+            // Initial state for LLM animation
+            resetLlmAnimation();
+        }
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+
+</body>
+</html>
